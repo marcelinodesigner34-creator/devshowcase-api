@@ -28,6 +28,16 @@ app.get("/api/profiles", (req, res)=>{
     res.json(profiles)
 });
 
+app.get("/api/profiles/:id", (req, res)=>{
+    const id= req.params.id;
+    const perfil =profiles.find(p => p.id === id)
+    if (!perfil){
+        res.status(404).json({mensagem:"Perfil nao encontrado"})
+    } else{
+        res.json(perfil)
+    }
+});
+
 app.post("/api/profiles", (req, res)=>{
      const novoPerfil= req.body;
      profiles.push(novoPerfil)
