@@ -10,8 +10,8 @@ const profiles =[{"id": "Ar-2026-0002", "nome": "Aron Pow", "email": "aron@gmail
     {"id": "Sam-2026-0003", "nome": "Samuel Jan", "email": "samu@gmail.com", "bio": "el magnifico", "github": "https://github.com/samu"}
 ]
 
-const projects =[{"id": "sis-2026-0004", "descricao": "sistema de automacao de notas", "nome": "NPRO", "github": "https://github.com/sis", "linkDemo": "https://lovable.dev/projects/npro", "idProfile": "npro-2026-0001", "curtidas": 10, "notaMedia": 5.5 }, 
-    {"id": "age-2026-0004", "descricao": "sistema de agendamento de projetor", "nome": "AGEPRO", "github": "https://github.com/age", "linkDemo": "https://lovable.dev/projects/agepro", "idProfile": "agepro-2026-0001", "curtidas": 9, "notaMedia": 7.0 }
+const projects =[{"id": "sis-2026-0004", "descricao": "sistema de automacao de notas", "nome": "NPRO", "github": "https://github.com/sis", "linkDemo": "https://lovable.dev/projects/npro", "idProfile": "Ar-2026-0002", "curtidas": 10, "notaMedia": 5.0 }, 
+    {"id": "age-2026-0004", "descricao": "sistema de agendamento de projetor", "nome": "AGEPRO", "github": "https://github.com/agepro", "linkDemo": "https://lovable.dev/projects/agepro", "idProfile": "Sam-2026-0003", "curtidas": 9, "notaMedia": 5.0 }
 ]
 
 app.get("/api/technologies", (req, res) => {
@@ -29,9 +29,9 @@ app.get("/api/profiles", (req, res)=>{
 });
 
 app.post("/api/profiles", (req, res)=>{
-     const pro2= req.body;
-     profiles.push(pro2)
-     res.status(201).json(pro2)
+     const novoPerfil= req.body;
+     profiles.push(novoPerfil)
+     res.status(201).json(novoPerfil)
 });
 
 app.get("/api/projects", (req, res)=>{
@@ -39,9 +39,9 @@ app.get("/api/projects", (req, res)=>{
 });
 
 app.post("/api/projects", (req, res)=>{
-    const AGEPRO = req.body
-    projects.push(AGEPRO)
-    res.status(201).json(AGEPRO)
+    const novoProjeto = req.body
+    projects.push(novoProjeto)
+    res.status(201).json(novoProjeto)
 });
 
 app.listen(3000, () => console.log("Servidor rodando na porta 3000"));
