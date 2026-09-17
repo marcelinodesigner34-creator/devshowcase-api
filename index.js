@@ -19,8 +19,9 @@ const projects =[{"id": "sis-2026-0004", "descricao": "sistema de automacao de n
     {"id": "age-2026-0004", "descricao": "sistema de agendamento de projetor", "nome": "AGEPRO", "github": "https://github.com/agepro", "linkDemo": "https://lovable.dev/projects/agepro", "idProfile": "Sam-2026-0003", "curtidas": 9, "notaMedia": 5.0 }
 ]
 
-app.get("/api/technologies", (req, res) => {
-    res.json(tec);
+app.get("/api/technologies", async (req, res) => {
+    const resultado = await pool.query("SELECT FROM technologies");
+    res.json(resultado.rows);
 });
 
 app.post("/api/technologies", (req, res) => {
