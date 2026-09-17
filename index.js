@@ -1,6 +1,11 @@
+require ("dotenv").config();
 const express = require("express");
+const {Pool} = require ("pg");
 const app = express();
 app.use(express.json());
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL
+});
 
 const tec = [{ "id": "js-2026-0001", "nome": "javaScript" },
 { "id": "rc-2026-0001", "nome": "React" }, { "id": "nod-2026-0001", "nome": "Node.js" },
@@ -52,6 +57,11 @@ app.post("/api/projects", (req, res)=>{
     const novoProjeto = req.body
     projects.push(novoProjeto)
     res.status(201).json(novoProjeto)
+});
+
+app.get("/api/teste", async (req, res)=>{
+    const resultado = await pool.query ("SELECT NOW()");
+    res.json(resultado.rows);
 });
 
 app.listen(3000, () => console.log("Servidor rodando na porta 3000"));
