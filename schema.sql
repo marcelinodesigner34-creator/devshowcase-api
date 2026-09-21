@@ -6,7 +6,7 @@ create table technologies (
 create table profiles (
     id serial primary key,
     nome varchar(100) not null,
-    email varchar(150) not null,
+    email varchar(150) not null unique,
     bio text,
     github varchar(200)
 );

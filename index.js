@@ -7,9 +7,6 @@ const pool = new Pool({
     connectionString: process.env.DATABASE_URL
 });
 
-const projects =[{"id": "sis-2026-0004", "descricao": "sistema de automacao de notas", "nome": "NPRO", "github": "https://github.com/sis", "linkDemo": "https://lovable.dev/projects/npro", "idProfile": "Ar-2026-0002", "curtidas": 10, "notaMedia": 5.0 }, 
-    {"id": "age-2026-0004", "descricao": "sistema de agendamento de projetor", "nome": "AGEPRO", "github": "https://github.com/agepro", "linkDemo": "https://lovable.dev/projects/agepro", "idProfile": "Sam-2026-0003", "curtidas": 9, "notaMedia": 5.0 }
-]
 
 app.get("/api/technologies", async (req, res) => {
     const resultado = await pool.query("SELECT * FROM technologies");
@@ -47,15 +44,17 @@ app.post("/api/profiles", async (req, res)=>{
       res.status(201).json(resultado.rows[0]);
 });
  
-
-app.get("/api/projects", (req, res)=>{
-    res.json(projects)
+app.get("/api/projects", async (req, res)=>{
+    const resultado = await pool.query("SELECT * FROM projects")
+    res.json(resultado.rows)
 });
 
-app.post("/api/projects", (req, res)=>{
-    const novoProjeto = req.body
-    projects.push(novoProjeto)
-    res.status(201).json(novoProjeto)
+app.post("/api/projects", async (req, res)=>{
+    const resultado = await pool.query(" INSERT INTO projects (nome, descricao, link_repositorio, link_demo, profile_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        [req.body.nome, req.body.descricao, req.body.link_repositorio, req.body.link_demo, req.body.profile_id,]
+    );
+  
+    res.status(201).json(resultado.rows[0])
 });
 
 app.get("/api/teste", async (req, res)=>{
