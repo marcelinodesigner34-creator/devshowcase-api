@@ -14,6 +14,9 @@ app.get("/api/technologies", async (req, res) => {
 });
 
 app.post("/api/technologies", async (req, res) => {
+    if (!req.body.nome || req.body.nome.trim() === ""){
+        return res.status(400).json({mensagem: "O campo não é obrigatório"});
+    }
     const resultado = await pool.query(
         "INSERT INTO technologies (nome) VALUES ($1) RETURNING *",
         [req.body.nome]
@@ -37,9 +40,19 @@ app.get("/api/profiles/:id", async (req, res)=>{
 });
 
 app.post("/api/profiles", async (req, res)=>{
+    const {nome, email, bio, github} = req.body;
+    if(!nome || nome.trim() === ""){
+        return res.status(400).json ({mensagem: "O campo nome é obrigatório , não vazio"})
+    }
+    if (!email || !email.includes("@")){
+        return res.status(400).json ({mensagem: "O campo email é obrigatório e deve ser válido"})
+    }
+    if(github && !github.startsWith("http")){
+        return res.status(400).json ({mensagem: "O campo github deve ser um link começando com http"})
+    }
       const resultado = await pool.query(
         "INSERT INTO profiles (nome, email, bio, github) VALUES ($1, $2, $3, $4) RETURNING *",
-        [req.body.nome, req.body.email, req.body.bio, req.body.github]
+        [nome, email, bio, github]
       );
       res.status(201).json(resultado.rows[0]);
 });
