@@ -63,8 +63,25 @@ app.get("/api/projects", async (req, res)=>{
 });
 
 app.post("/api/projects", async (req, res)=>{
+    const {nome, descricao, link_repositorio, link_demo, profile_id} = req.body;
+    if (!nome || nome.trim() === ""){
+        return res.status(400).json ({mensagem: "O campo nome é obrigatório, não vazio"});
+    } 
+    if(link_repositorio && !link_repositorio.startsWith("http")){
+        return res.status(400).json ({mensagem: "O campo link_repositorio deve começar com http"});
+    } 
+    if (link_demo && !link_demo.startsWith("http")){
+        return res.status(400).json ({mensagem: "O campo link_demo deve começar com http"});
+    }
+    if(!profile_id){
+        return res.status(400).json ({mensagem: "O campo profile_id é obrigatório"});
+    }
+    const perfil = await pool.query("SELECT * FROM profiles WHERE id = $1", [profile_id]);
+    if (perfil.rows.length ===0){
+        return res.status(404).json ({mensagem: "Perfil não encontrado"});
+    }
     const resultado = await pool.query(" INSERT INTO projects (nome, descricao, link_repositorio, link_demo, profile_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-        [req.body.nome, req.body.descricao, req.body.link_repositorio, req.body.link_demo, req.body.profile_id,]
+        [nome, descricao, link_repositorio, link_demo, profile_id]
     );
   
     res.status(201).json(resultado.rows[0])
