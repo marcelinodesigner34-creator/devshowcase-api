@@ -87,9 +87,4 @@ app.post("/api/projects", async (req, res)=>{
     res.status(201).json(resultado.rows[0])
 });
 
-app.get("/api/teste", async (req, res)=>{
-    const resultado = await pool.query ("SELECT NOW()");
-    res.json(resultado.rows);
-});
-
 app.listen(3000, () => console.log("Servidor rodando na porta 3000"));
