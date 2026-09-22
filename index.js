@@ -96,5 +96,24 @@ if (resultado.rows.length ===0){
 }
 res.json(resultado.rows[0]);
 });
+
+app.post("/api/projects/:id/feedbacks", async(req, res)=>{
+    const id= req.params.id;
+    const {nota, comentario}= req.body
+    if(!nota || nota <1 || nota >5){
+        return res.status(400).json({mensagem: "A nota é obrigatória e deve ser entre 1 e 5"});
+    }
+    const projeto = await pool.query("SELECT * FROM projects WHERE id = $1", [id]);
+    if (projeto.rows.length ===0){
+        return res.status(404).json ({mensagem: "Projeto não encontrado"});
+}
+
+ const resultado = await pool.query("INSERT INTO feedbacks (nota, comentario, project_id) VALUES ($1, $2, $3) RETURNING *", [nota, comentario, id]
+ );
+ await pool.query("UPDATE projects SET nota_media = (SELECT AVG(nota) FROM feedbacks WHERE project_id = $1) WHERE id = $1", [id]
+ )
+ res .status(201).json(resultado.rows[0]);
+});
+
 const PORT= process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
