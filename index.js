@@ -15,7 +15,7 @@ app.get("/api/technologies", async (req, res) => {
 
 app.post("/api/technologies", async (req, res) => {
     if (!req.body.nome || req.body.nome.trim() === ""){
-        return res.status(400).json({mensagem: "O campo não é obrigatório"});
+        return res.status(400).json({mensagem: "O campo nome é obrigatório"});
     }
     const resultado = await pool.query(
         "INSERT INTO technologies (nome) VALUES ($1) RETURNING *",
@@ -87,4 +87,5 @@ app.post("/api/projects", async (req, res)=>{
     res.status(201).json(resultado.rows[0])
 });
 
-app.listen(3000, () => console.log("Servidor rodando na porta 3000"));
+const PORT= process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
