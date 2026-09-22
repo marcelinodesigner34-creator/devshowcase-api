@@ -87,5 +87,14 @@ app.post("/api/projects", async (req, res)=>{
     res.status(201).json(resultado.rows[0])
 });
 
+app.put("/api/projects/:id/upvote", async (req,res)=>{
+    const id = req.params.id;
+    const resultado = await pool.query("UPDATE projects SET curtidas = curtidas + 1 WHERE id = $1 RETURNING *", [id]
+);
+if (resultado.rows.length ===0){
+    return res.status(404).json({mensagem: "Projeto não encontrado"});
+}
+res.json(resultado.rows[0]);
+});
 const PORT= process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
