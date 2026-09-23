@@ -8,34 +8,51 @@ const pool = new Pool({
 });
 
 
-app.get("/api/technologies", async (req, res) => {
-    const resultado = await pool.query("SELECT * FROM technologies");
+app.get("/api/technologies", async (req, res, next) => {
+    try{
+  const resultado = await pool.query("SELECT * FROM technologies");
     res.json(resultado.rows);
+    } catch (erro){
+        next(erro);
+    }
+  
 });
 
-app.post("/api/technologies", async (req, res) => {
+app.post("/api/technologies", async (req, res, next) => {
     if (!req.body.nome || req.body.nome.trim() === "") {
         return res.status(400).json({ mensagem: "O campo nome é obrigatório" });
     }
-    const resultado = await pool.query(
+    try {
+         const resultado = await pool.query(
         "INSERT INTO technologies (nome) VALUES ($1) RETURNING *",
         [req.body.nome]
     );
     res.status(201).json(resultado.rows[0]);
+    } catch (erro){
+        next(erro);
+    }
 });
 
-app.get("/api/profiles", async (req, res) => {
-    const resultado = await pool.query("SELECT * FROM profiles");
+
+app.get("/api/profiles", async (req, res, next) => {
+    try{
+  const resultado = await pool.query("SELECT * FROM profiles");
     res.json(resultado.rows);
+    } catch(erro){
+        next(erro);
+    }
 });
 
-app.get("/api/profiles/:id", async (req, res) => {
+app.get("/api/profiles/:id", async (req, res, next) => {
     const id = req.params.id;
-    const resultado = await pool.query("SELECT * FROM profiles WHERE id= $1", [id])
+    try{
+   const resultado = await pool.query("SELECT * FROM profiles WHERE id= $1", [id]);
     if (resultado.rows.length === 0) {
-        res.status(404).json({ mensagem: "Perfil nao encontrado" })
-    } else {
+        return res.status(404).json({ mensagem: "Perfil nao encontrado"});
+    } 
         res.json(resultado.rows[0])
+    } catch(erro){
+        next(erro);
     }
 });
 
@@ -61,7 +78,7 @@ app.post("/api/profiles", async (req, res, next) => {
     } 
 });
 
-app.get("/api/projects", async (req, res) => {
+app.get("/api/projects", async (req, res, next) => {
     const { technology_id, page, limit } = req.query;
 
     let sql = "SELECT * FROM projects";
@@ -78,12 +95,15 @@ app.get("/api/projects", async (req, res) => {
 
     sql += ` LIMIT $${valores.length + 1} OFFSET $${valores.length + 2} `;
     valores.push(limitePorPagina, pular);
-
+try{
     const resultado = await pool.query(sql, valores);
     res.json(resultado.rows);
+} catch(erro){
+    next(erro);
+}
 });
 
-app.post("/api/projects", async (req, res) => {
+app.post("/api/projects", async (req, res, next) => {
     const { nome, descricao, link_repositorio, link_demo, profile_id } = req.body;
     if (!nome || nome.trim() === "") {
         return res.status(400).json({ mensagem: "O campo nome é obrigatório, não vazio" });
@@ -97,53 +117,64 @@ app.post("/api/projects", async (req, res) => {
     if (!profile_id) {
         return res.status(400).json({ mensagem: "O campo profile_id é obrigatório" });
     }
-    const perfil = await pool.query("SELECT * FROM profiles WHERE id = $1", [profile_id]);
+    try{
+  const perfil = await pool.query("SELECT * FROM profiles WHERE id = $1", [profile_id]);
     if (perfil.rows.length === 0) {
         return res.status(404).json({ mensagem: "Perfil não encontrado" });
     }
     const resultado = await pool.query(" INSERT INTO projects (nome, descricao, link_repositorio, link_demo, profile_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
         [nome, descricao, link_repositorio, link_demo, profile_id]
     );
-
-    res.status(201).json(resultado.rows[0])
+     res.status(201).json(resultado.rows[0]);
+    } catch(erro){
+        next(erro);
+    }
 });
 
-app.put("/api/projects/:id/upvote", async (req, res) => {
+app.put("/api/projects/:id/upvote", async (req, res, next) => {
     const id = req.params.id;
-    const resultado = await pool.query("UPDATE projects SET curtidas = curtidas + 1 WHERE id = $1 RETURNING *", [id]
+    try{
+  const resultado = await pool.query("UPDATE projects SET curtidas = curtidas + 1 WHERE id = $1 RETURNING *", [id]
     );
     if (resultado.rows.length === 0) {
         return res.status(404).json({ mensagem: "Projeto não encontrado" });
     }
     res.json(resultado.rows[0]);
+    } catch(erro){
+        next(erro);
+    }
 });
 
-app.post("/api/projects/:id/feedbacks", async (req, res) => {
+app.post("/api/projects/:id/feedbacks", async (req, res, next) => {
     const id = req.params.id;
     const { nota, comentario } = req.body
     if (!nota || nota < 1 || nota > 5) {
         return res.status(400).json({ mensagem: "A nota é obrigatória e deve ser entre 1 e 5" });
     }
+    try{
     const projeto = await pool.query("SELECT * FROM projects WHERE id = $1", [id]);
     if (projeto.rows.length === 0) {
         return res.status(404).json({ mensagem: "Projeto não encontrado" });
     }
-
     const resultado = await pool.query("INSERT INTO feedbacks (nota, comentario, project_id) VALUES ($1, $2, $3) RETURNING *", [nota, comentario, id]
     );
     await pool.query("UPDATE projects SET nota_media = (SELECT AVG(nota) FROM feedbacks WHERE project_id = $1) WHERE id = $1", [id]
     )
     res.status(201).json(resultado.rows[0]);
+    } catch(erro){
+        next(erro);
+    }
 });
 
-app.post("/api/projects/:id/technologies", async (req, res) => {
+app.post("/api/projects/:id/technologies", async (req, res, next) => {
     const id = req.params.id;
     const { technology_id } = req.body;
 
     if (!technology_id) {
         return res.status(400).json({ "mensagem": "O campo technology_id é obrigatório" });
     }
-    const projeto = await pool.query("SELECT * FROM projects WHERE id = $1", [id]);
+    try{
+ const projeto = await pool.query("SELECT * FROM projects WHERE id = $1", [id]);
     if (projeto.rows.length === 0) {
         return res.status(404).json({ "mensagem": "projeto não encontrado" });
     }
@@ -155,8 +186,10 @@ app.post("/api/projects/:id/technologies", async (req, res) => {
         [id, technology_id]);
 
     res.status(201).json(resultado.rows[0])
-
-})
+    } catch(erro){
+        next(erro);
+    }
+});
 
 app.use((erro, req, res, next) => {
     console.error(erro);
