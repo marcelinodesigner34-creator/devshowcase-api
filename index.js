@@ -58,8 +58,25 @@ app.post("/api/profiles", async (req, res)=>{
 });
  
 app.get("/api/projects", async (req, res)=>{
-    const resultado = await pool.query("SELECT * FROM projects")
-    res.json(resultado.rows)
+   const { technology_id, page, limit } = req.query;
+
+    let sql = "SELECT * FROM projects";
+    const valores = [];
+
+    if(technology_id){
+        sql += " WHERE id IN (SELECT project_id FROM project_technologies WHERE technology_id = $1)";
+        valores.push(technology_id);
+    }
+
+    const limitePorPagina = limit || 10;
+    const paginaAtual = page || 1;
+    const pular = (paginaAtual - 1) * limitePorPagina;
+
+    sql += ` LIMIT $${valores.length + 1} OFFSET $${valores.length + 2} `;
+    valores.push(limitePorPagina, pular);
+    
+    const resultado= await pool.query(sql, valores);
+    res.json(resultado.rows);
 });
 
 app.post("/api/projects", async (req, res)=>{
