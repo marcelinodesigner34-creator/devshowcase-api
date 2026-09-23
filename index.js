@@ -115,5 +115,28 @@ app.post("/api/projects/:id/feedbacks", async(req, res)=>{
  res .status(201).json(resultado.rows[0]);
 });
 
+app.post("/api/projects/:id/technologies", async(req, res)=>{
+    const id= req.params.id;
+    const {technology_id} = req.body;
+
+    if(!technology_id){
+        return res.status(400).json({"mensagem": "O campo technology_id é obrigatório"});
+    }
+    const projeto = await pool.query("SELECT * FROM projects WHERE id = $1", [id]);
+    if(projeto.rows.length ===0){
+        return res.status(404).json({"mensagem": "projeto não encontrado"});
+    }
+    const tecnologia = await pool.query("SELECT * FROM technologies WHERE id =$1", [technology_id]);
+    if(tecnologia.rows.length ===0){
+        return res.status(404).json({"mensagem": "Tecnologia não encontrada"});
+    }
+    const resultado = await pool.query("INSERT INTO project_technologies (project_id, technology_id) VALUES ($1, $2) RETURNING *",
+        [id, technology_id]);
+
+        res.status(201).json(resultado.rows[0])
+    
+})
+    
 const PORT= process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+
