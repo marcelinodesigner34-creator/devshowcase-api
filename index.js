@@ -1,13 +1,38 @@
+const swaggerUi= require("swagger-ui-express");
+const swaggerJsdoc = require("swagger-jsdoc");
+
 require("dotenv").config();
 const express = require("express");
 const { Pool } = require("pg");
 const app = express();
 app.use(express.json());
+const swaggerOptions = {
+    definition: {
+        openapi: "3.0.0",
+        info: {
+            title: "DevShowcase API",
+            version: "1.0.0",
+            description: "API REST para cadastro de perfis, projetos, tecnologias e feedbacks"
+        }
+    },
+    apis: ["./index.js"]
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL
 });
 
-
+/**
+ * @swagger
+ * /api/technologies:
+ *   get:
+ *     summary: Lista todas as tecnologias
+ *     responses:
+ *       200:
+ *         description: Lista de tecnologias
+ */
 app.get("/api/technologies", async (req, res, next) => {
     try{
   const resultado = await pool.query("SELECT * FROM technologies");
@@ -18,6 +43,26 @@ app.get("/api/technologies", async (req, res, next) => {
   
 });
 
+/**
+ * @swagger
+ * /api/technologies:
+ *   post:
+ *     summary: Cadastra uma nova tecnologia
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Tecnologia criada
+ *       400:
+ *         description: Dados inválidos
+ */
 app.post("/api/technologies", async (req, res, next) => {
     if (!req.body.nome || req.body.nome.trim() === "") {
         return res.status(400).json({ mensagem: "O campo nome é obrigatório" });
@@ -33,7 +78,15 @@ app.post("/api/technologies", async (req, res, next) => {
     }
 });
 
-
+/**
+ * @swagger
+ * /api/profiles:
+ *   get:
+ *     summary: Lista todos os perfis
+ *     responses:
+ *       200:
+ *         description: Lista de perfis
+ */
 app.get("/api/profiles", async (req, res, next) => {
     try{
   const resultado = await pool.query("SELECT * FROM profiles");
@@ -43,6 +96,23 @@ app.get("/api/profiles", async (req, res, next) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/profiles/{id}:
+ *   get:
+ *     summary: Busca um perfil pelo id
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Perfil encontrado
+ *       404:
+ *         description: Perfil não encontrado
+ */
 app.get("/api/profiles/:id", async (req, res, next) => {
     const id = req.params.id;
     try{
@@ -56,6 +126,34 @@ app.get("/api/profiles/:id", async (req, res, next) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/profiles:
+ *   post:
+ *     summary: Cadastra um novo perfil
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               bio:
+ *                 type: string
+ *               github:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Perfil criado
+ *       400:
+ *         description: Dados inválidos
+ *       409:
+ *         description: Email já cadastrado
+ */
 app.post("/api/profiles", async (req, res, next) => {
     const { nome, email, bio, github } = req.body;
     if (!nome || nome.trim() === "") {
@@ -78,6 +176,28 @@ app.post("/api/profiles", async (req, res, next) => {
     } 
 });
 
+/**
+ * @swagger
+ * /api/projects:
+ *   get:
+ *     summary: Lista projetos com filtro por tecnologia e paginação
+ *     parameters:
+ *       - in: query
+ *         name: technology_id
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lista de projetos
+ */
 app.get("/api/projects", async (req, res, next) => {
     const { technology_id, page, limit } = req.query;
 
@@ -103,6 +223,36 @@ try{
 }
 });
 
+/**
+ * @swagger
+ * /api/projects:
+ *   post:
+ *     summary: Cadastra um novo projeto
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *               descricao:
+ *                 type: string
+ *               link_repositorio:
+ *                 type: string
+ *               link_demo:
+ *                 type: string
+ *               profile_id:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Projeto criado
+ *       400:
+ *         description: Dados inválidos
+ *       404:
+ *         description: Perfil não encontrado
+ */
 app.post("/api/projects", async (req, res, next) => {
     const { nome, descricao, link_repositorio, link_demo, profile_id } = req.body;
     if (!nome || nome.trim() === "") {
@@ -131,6 +281,23 @@ app.post("/api/projects", async (req, res, next) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/projects/{id}/upvote:
+ *   put:
+ *     summary: Incrementa as curtidas de um projeto
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Curtidas atualizadas
+ *       404:
+ *         description: Projeto não encontrado
+ */
 app.put("/api/projects/:id/upvote", async (req, res, next) => {
     const id = req.params.id;
     try{
@@ -145,6 +312,36 @@ app.put("/api/projects/:id/upvote", async (req, res, next) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/projects/{id}/feedbacks:
+ *   post:
+ *     summary: Cadastra um feedback e recalcula a nota média do projeto
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nota:
+ *                 type: integer
+ *               comentario:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Feedback criado
+ *       400:
+ *         description: Nota inválida
+ *       404:
+ *         description: Projeto não encontrado
+ */
 app.post("/api/projects/:id/feedbacks", async (req, res, next) => {
     const id = req.params.id;
     const { nota, comentario } = req.body
@@ -166,6 +363,34 @@ app.post("/api/projects/:id/feedbacks", async (req, res, next) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/projects/{id}/technologies:
+ *   post:
+ *     summary: Vincula uma tecnologia a um projeto
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               technology_id:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Tecnologia vinculada
+ *       400:
+ *         description: Dados inválidos
+ *       404:
+ *         description: Projeto ou tecnologia não encontrada
+ */
 app.post("/api/projects/:id/technologies", async (req, res, next) => {
     const id = req.params.id;
     const { technology_id } = req.body;
